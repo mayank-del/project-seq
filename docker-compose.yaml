@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  service1:
+    build:
+      context: ./microservice1
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./microservice1:/app
+    depends_on:
+      - mysql
+  mysql:
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=alemeno
+      
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
