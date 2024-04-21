@@ -1,11 +1,20 @@
 const {Sequelize, DataTypes}=require("sequelize");
 
 const sequelize = new Sequelize('alemeno','root', 'root', {
-    host: 'mysql',
+
+  //for production or docker containers
+
+  /* host: 'mysql',
+    logging:false,
+    port:3306,
+    dialect: "mysql" }) */
+   
+    //for dev or local
+    
+    host: 'localhost',
     logging:false,
     port:3306,
     dialect: "mysql" })
-   
 
   try {
     sequelize.authenticate();

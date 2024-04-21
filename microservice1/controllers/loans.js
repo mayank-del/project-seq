@@ -3,6 +3,24 @@ const db = require("../models");
 const Loan = db.loan;
 const Customer = db.customer;
 
+const util = require("util");
+const { createClient } = require("redis");
+
+// for production
+//const redisUrl="http://127.0.0.1:6379"
+
+let redisClient;
+
+(async () => {
+  redisClient = createClient();
+
+  redisClient.on("error", (error) => console.error(`Error : ${error}`));
+
+  await redisClient.connect();
+})();
+/* client.set=util.promisify(client.set)
+client.get=util.promisify(client.get) */
+
 exports.createLoansInBulk = async (req, res) => {
   const values = req.body.loan.map((item) => ({
     customer_id: item.customer_id,
@@ -20,11 +38,23 @@ exports.createLoansInBulk = async (req, res) => {
 };
 
 exports.viewLoan = async (req, res) => {
+  console.log("worked till line 32");
   let loanId = req.params.loan_id;
-
+  //console.log(loanId);
+  const cachedData = await redisClient.get(`post-${loanId}`);
+  console.log("worked till line 35");
+  if (cachedData) {
+    console.log("worked till line 37");
+    return res
+      .status(200)
+      .send({ "fetched from catch": JSON.parse(cachedData) });
+  }
   const loan = await Loan.findOne({ where: { loan_id: loanId } });
+  console.log("line 46 loan data : ", loan["dataValues"]);
   if (!loan) return res.status(404).send("loan id not found!");
 
+  await redisClient.set(`post-${loanId}`, JSON.stringify(loan["dataValues"]));
+  console.log("worked till line 44");
   const customer_details = await Customer.findOne({
     where: { customer_id: loan.customer_id },
   });
